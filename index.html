@@ -350,6 +350,29 @@
     font-size:13px;
   }
   .tracking-details[hidden]{ display:none; }
+  .care-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:18px;
+  }
+  .care-card{
+    padding:22px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .care-card h4{ margin:0 0 8px; font-family:'Fraunces', serif; font-size:23px; color:var(--brown-dark); }
+  .care-card p{ margin:0 0 15px; color:var(--brown-mid); font-size:14px; }
+  .feeding-list{ display:grid; gap:9px; margin:0; padding:0; list-style:none; }
+  .feeding-list li{ display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid var(--line); font-size:14px; }
+  .feeding-list strong{ color:var(--brown-dark); }
+  .symptom-form{ display:grid; gap:12px; }
+  .symptom-options{ display:grid; gap:8px; }
+  .symptom-options label{ display:flex; gap:8px; align-items:flex-start; color:var(--brown-dark); font-size:14px; }
+  .symptom-options input{ margin-top:3px; accent-color:var(--sage); }
+  .symptom-result{ margin-top:14px; padding:14px; background:var(--yolk-light); border-radius:5px; color:var(--brown-dark); font-size:14px; }
+  .symptom-result[hidden]{ display:none; }
+  .medical-note{ margin-top:12px !important; font-size:12px !important; }
 
   footer{
     padding:30px 0 44px;
@@ -441,6 +464,41 @@
         <span>Jour 16</span>
         <span>21 jours</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="soins">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h3>Alimentation et santé</h3>
+        <p>Des repères quotidiens selon l’âge indiqué pour ce poussin.</p>
+      </div>
+    </div>
+    <div class="care-grid">
+      <article class="care-card">
+        <h4>Jours de nourriture</h4>
+        <p id="feeding-summary">Choisissez d’abord la date de naissance pour voir les conseils.</p>
+        <ul class="feeding-list" id="feeding-list"></ul>
+      </article>
+      <article class="care-card">
+        <h4>Décrire les symptômes</h4>
+        <p>Sélectionnez les signes observés pour obtenir une première orientation.</p>
+        <form class="symptom-form" id="symptom-form">
+          <div class="symptom-options">
+            <label><input type="checkbox" name="symptom" value="respiration"> Respiration difficile ou bruyante</label>
+            <label><input type="checkbox" name="symptom" value="lethargy"> Très faible, couché ou ne réagit presque pas</label>
+            <label><input type="checkbox" name="symptom" value="diarrhea"> Diarrhée importante ou sang dans les fientes</label>
+            <label><input type="checkbox" name="symptom" value="notEating"> Ne mange pas ou ne boit pas</label>
+            <label><input type="checkbox" name="symptom" value="cold"> Froid, tremblements ou plumage gonflé</label>
+            <label><input type="checkbox" name="symptom" value="eye"> Œil gonflé, écoulement ou blessure</label>
+          </div>
+          <button class="btn" type="submit">Analyser les signes</button>
+        </form>
+        <div class="symptom-result" id="symptom-result" role="status" hidden></div>
+        <p class="medical-note">Cet outil ne remplace pas un vétérinaire. N’administrez pas de médicament sans avis professionnel.</p>
+      </article>
     </div>
   </div>
 </section>
@@ -557,6 +615,10 @@
   const birthDate = document.getElementById('birth-date');
   const birthError = document.getElementById('birth-error');
   const trackingDetails = document.getElementById('tracking-details');
+  const feedingSummary = document.getElementById('feeding-summary');
+  const feedingList = document.getElementById('feeding-list');
+  const symptomForm = document.getElementById('symptom-form');
+  const symptomResult = document.getElementById('symptom-result');
   const today = new Date();
   const todayValue = today.toISOString().split('T')[0];
   birthDate.max = todayValue;
@@ -579,8 +641,37 @@
     const ageInDays = Math.max(0, Math.floor((today - born) / 86400000));
     const ageLabel = ageInDays === 0 ? 'né aujourd’hui' : `${ageInDays} jour${ageInDays > 1 ? 's' : ''}`;
     birthError.textContent = `Poussin ${ageLabel}. Voici son suivi.`;
+    updateFeedingAdvice(ageInDays);
     trackingDetails.hidden = false;
     trackingDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function updateFeedingAdvice(ageInDays) {
+    let advice;
+    if (ageInDays <= 7) {
+      advice = [['Chaque jour', 'Aliment complet démarrage poussin à volonté'], ['Toute la journée', 'Eau propre et fraîche, renouvelée au moins 2 fois']];
+    } else if (ageInDays <= 28) {
+      advice = [['Chaque jour', 'Aliment complet croissance à volonté'], ['Matin et soir', 'Vérifier mangeoire, eau et litière sèche']];
+    } else {
+      advice = [['Chaque jour', 'Aliment adapté à l’âge, en suivant l’étiquette'], ['Matin et soir', 'Contrôler la consommation, l’eau et l’état général']];
+    }
+    feedingSummary.textContent = `Repères pour un poussin de ${ageInDays} jour${ageInDays > 1 ? 's' : ''}.`;
+    feedingList.innerHTML = advice.map(([when, text]) => `<li><strong>${when}</strong><span>${text}</span></li>`).join('');
+  }
+
+  symptomForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const symptoms = [...symptomForm.querySelectorAll('input:checked')].map((input) => input.value);
+    if (!symptoms.length) {
+      symptomResult.textContent = 'Sélectionnez au moins un signe observé.';
+    } else if (symptoms.some((symptom) => ['respiration', 'lethargy', 'diarrhea', 'eye'].includes(symptom))) {
+      symptomResult.textContent = 'Ces signes peuvent correspondre à un problème sérieux. Isolez doucement le poussin, gardez-le au chaud et au calme, laissez de l’eau propre à disposition, puis contactez rapidement un vétérinaire aviaire. Une difficulté respiratoire ou un poussin très faible doit être traité comme une urgence.';
+    } else if (symptoms.includes('notEating')) {
+      symptomResult.textContent = 'Le poussin peut être affaibli ou déshydraté. Vérifiez la température, rapprochez l’eau et l’aliment adapté, surveillez-le souvent et contactez un vétérinaire si cela dure ou s’il devient faible.';
+    } else {
+      symptomResult.textContent = 'Le froid peut expliquer ces signes. Vérifiez la chaleur, l’absence de courant d’air, l’eau propre et l’aliment adapté. Si les signes persistent, demandez conseil à un vétérinaire.';
+    }
+    symptomResult.hidden = false;
   });
 </script>
 
