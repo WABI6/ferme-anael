@@ -1,0 +1,12 @@
+{
+  "name": "Ferme Anael — Suivi des poussins",
+  "short_name": "Ferme Anael",
+  "description": "Suivi des couvées, des poussins et du journal du poulailler.",
+  "start_url": "./ferme-anael.html",
+  "display": "standalone",
+  "background_color": "#FBF3DD",
+  "theme_color": "#E8A93F",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
