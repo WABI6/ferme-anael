@@ -373,6 +373,12 @@
   .symptom-result{ margin-top:14px; padding:14px; background:var(--yolk-light); border-radius:5px; color:var(--brown-dark); font-size:14px; }
   .symptom-result[hidden]{ display:none; }
   .medical-note{ margin-top:12px !important; font-size:12px !important; }
+  .stages{ display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+  .stage{ display:grid; grid-template-columns:92px 1fr; gap:14px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:5px; background:#fff; }
+  .stage.current{ border-color:var(--sage); background:var(--sage-light); }
+  .stage-days{ font-weight:600; color:var(--brown-dark); }
+  .stage h5{ margin:0 0 4px; font-size:15px; color:var(--brown-dark); }
+  .stage p{ margin:0; font-size:13px; color:var(--brown-mid); }
 
   footer{
     padding:30px 0 44px;
@@ -500,6 +506,11 @@
         <p class="medical-note">Cet outil ne remplace pas un vétérinaire. N’administrez pas de médicament sans avis professionnel.</p>
       </article>
     </div>
+    <div class="care-card" style="margin-top:18px;">
+      <h4>Étapes d’élevage — 31 jours</h4>
+      <p id="stage-summary">Indiquez la date de naissance pour situer le poussin dans son parcours.</p>
+      <ol class="stages" id="stages-list"></ol>
+    </div>
   </div>
 </section>
 
@@ -619,6 +630,8 @@
   const feedingList = document.getElementById('feeding-list');
   const symptomForm = document.getElementById('symptom-form');
   const symptomResult = document.getElementById('symptom-result');
+  const stageSummary = document.getElementById('stage-summary');
+  const stagesList = document.getElementById('stages-list');
   const today = new Date();
   const todayValue = today.toISOString().split('T')[0];
   birthDate.max = todayValue;
@@ -642,6 +655,7 @@
     const ageLabel = ageInDays === 0 ? 'né aujourd’hui' : `${ageInDays} jour${ageInDays > 1 ? 's' : ''}`;
     birthError.textContent = `Poussin ${ageLabel}. Voici son suivi.`;
     updateFeedingAdvice(ageInDays);
+    updateStageAdvice(ageInDays);
     trackingDetails.hidden = false;
     trackingDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
@@ -657,6 +671,22 @@
     }
     feedingSummary.textContent = `Repères pour un poussin de ${ageInDays} jour${ageInDays > 1 ? 's' : ''}.`;
     feedingList.innerHTML = advice.map(([when, text]) => `<li><strong>${when}</strong><span>${text}</span></li>`).join('');
+  }
+
+  function updateStageAdvice(ageInDays) {
+    const stages = [
+      ['Jours 1 à 3', 1, 3, 'Installation', 'Garder une chaleur stable, une litière sèche, de l’eau propre et un aliment démarrage accessibles en permanence.'],
+      ['Jours 4 à 7', 4, 7, 'Observation', 'Contrôler matin et soir l’activité, le remplissage du jabot, les fientes, la température et le comportement du groupe.'],
+      ['Jours 8 à 14', 8, 14, 'Croissance', 'Maintenir l’aliment adapté, renouveler l’eau, retirer la litière humide et surveiller le poids et les signes de faiblesse.'],
+      ['Jours 15 à 21', 15, 21, 'Autonomie progressive', 'Agrandir l’espace si nécessaire, garder une zone chaude accessible et habituer doucement les poussins à un environnement propre et calme.'],
+      ['Jours 22 à 28', 22, 28, 'Renforcement', 'Vérifier le plumage, les pattes, la respiration et la consommation. Éviter les courants d’air et les changements brusques d’alimentation.'],
+      ['Jours 29 à 31', 29, 31, 'Transition', 'Préparer progressivement la suite de l’élevage selon la race et la météo, tout en conservant un abri sec, une eau propre et une alimentation adaptée.']
+    ];
+    stageSummary.textContent = ageInDays > 31 ? `Le poussin a ${ageInDays} jours : le programme détaillé couvre ses 31 premiers jours.` : `Jour ${Math.max(1, ageInDays)} sur 31.`;
+    stagesList.innerHTML = stages.map(([days, start, end, title, text]) => {
+      const current = ageInDays >= start && ageInDays <= end ? ' current' : '';
+      return `<li class="stage${current}"><div class="stage-days">${days}</div><div><h5>${title}</h5><p>${text}</p></div></li>`;
+    }).join('');
   }
 
   symptomForm.addEventListener('submit', (event) => {
