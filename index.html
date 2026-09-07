@@ -300,6 +300,57 @@
     max-width:560px;
   }
 
+  .birth-gate{
+    max-width:620px;
+    margin:42px auto 18px;
+    padding:28px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    box-shadow:0 12px 28px rgba(62,44,28,.08);
+  }
+  .birth-gate h2{
+    margin:0 0 8px;
+    font-family:'Fraunces', serif;
+    font-size:28px;
+    font-weight:600;
+    color:var(--brown-dark);
+  }
+  .birth-gate p{
+    margin:0 0 18px;
+    color:var(--brown-mid);
+  }
+  .birth-form{
+    display:flex;
+    align-items:end;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .birth-form label{
+    display:grid;
+    gap:6px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--brown-dark);
+  }
+  .birth-form input{
+    min-height:42px;
+    padding:9px 11px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    background:#fff;
+    color:var(--brown-dark);
+    font:inherit;
+  }
+  .birth-form .btn{ min-height:42px; cursor:pointer; }
+  .birth-error{
+    width:100%;
+    margin:0;
+    color:#a34835;
+    font-size:13px;
+  }
+  .tracking-details[hidden]{ display:none; }
+
   footer{
     padding:30px 0 44px;
     display:flex;
@@ -337,6 +388,20 @@
   </div>
 </header>
 
+<section class="birth-gate" aria-labelledby="birth-title">
+  <h2 id="birth-title">Accéder au suivi du poussin</h2>
+  <p>Indiquez la date de naissance du poussin pour afficher les détails de son suivi.</p>
+  <form class="birth-form" id="birth-form">
+    <label for="birth-date">
+      Date de naissance
+      <input id="birth-date" name="birth-date" type="date" required>
+    </label>
+    <button class="btn" type="submit">Afficher le suivi</button>
+    <p class="birth-error" id="birth-error" role="alert" aria-live="polite"></p>
+  </form>
+</section>
+
+<div class="tracking-details" id="tracking-details" hidden>
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
@@ -484,6 +549,40 @@
     <span id="contact">Mis à jour le 7 septembre 2026</span>
   </div>
 </footer>
+
+</div>
+
+<script>
+  const birthForm = document.getElementById('birth-form');
+  const birthDate = document.getElementById('birth-date');
+  const birthError = document.getElementById('birth-error');
+  const trackingDetails = document.getElementById('tracking-details');
+  const today = new Date();
+  const todayValue = today.toISOString().split('T')[0];
+  birthDate.max = todayValue;
+
+  birthForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    birthError.textContent = '';
+
+    if (!birthDate.value) {
+      birthError.textContent = 'Veuillez renseigner une date de naissance.';
+      return;
+    }
+
+    if (birthDate.value > todayValue) {
+      birthError.textContent = 'La date de naissance ne peut pas être dans le futur.';
+      return;
+    }
+
+    const born = new Date(`${birthDate.value}T00:00:00`);
+    const ageInDays = Math.max(0, Math.floor((today - born) / 86400000));
+    const ageLabel = ageInDays === 0 ? 'né aujourd’hui' : `${ageInDays} jour${ageInDays > 1 ? 's' : ''}`;
+    birthError.textContent = `Poussin ${ageLabel}. Voici son suivi.`;
+    trackingDetails.hidden = false;
+    trackingDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+</script>
 
 </body>
 </html>
